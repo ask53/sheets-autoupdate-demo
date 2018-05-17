@@ -1,0 +1,109 @@
+<html>
+	<head>
+		<!-- char encoding -->	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<!-- char encoding -->	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<!-- author -->			<meta name="author" content="aaron krupp | Caminos de Agua">
+		<!-- jquery -->			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<!-- google charts -->	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<!-- google visualization API -->
+								<script type="text/javascript">
+									google.charts.load('current', {packages: ['corechart']});
+									google.charts.setOnLoadCallback(getDataAndDoStuff);
+									
+									function getDataAndDoStuff() {
+										var url = "https://docs.google.com/spreadsheets/d/18rOaxnW3bPL1gD_SlmY2S9TDQQ2zsu25X68wdYATfeY/edit?usp=sharing"
+										console.log(url);
+										var options = {sendMethod: 'auto'};
+										var query = new google.visualization.Query(url, options);
+										query.setQuery('select *');
+										query.send(onQueryResponse);
+									}
+									
+									function onQueryResponse(response) {
+										console.log(response.isError());
+										if(!response.isError() ) {
+											
+											var resp = response; 
+											var data = googleDataTable2JSON(response.getDataTable());
+											
+											buildHtmlTable('#displayedTable', data);
+											
+											
+										} else {
+											console.log("¡¡¡ErRoR, aSsH0l33333!!");
+										}
+									}
+									
+									function googleDataTable2JSON(dataTable) {
+										cols = dataTable.ng;
+										rows = dataTable.og;
+										numCols = dataTable.ng.length;
+										numRows = dataTable.og.length;
+										console.log(numCols+", "+numRows)
+										
+										var data = [];
+										
+										for(var i=0; i<numRows; i++) {
+											data.push({});
+											for(var j=0; j<numCols; j++) {
+												var key = cols[j].label;
+												//console.log(key);
+												var value;
+												if (rows[i].c[j] != null) {
+													value = String(rows[i].c[j].v);
+												} else {
+													value = "";
+												}
+												//console.log(value);
+												data[i][key] = value;
+											}
+										}
+										return data
+									
+									
+									}
+									
+									// Builds the HTML Table out of myList.
+									function buildHtmlTable(selector, data) {
+									var columns = addAllColumnHeaders(data, selector);
+									
+									for (var i = 0; i < data.length; i++) {
+										var row$ = $('<tr/>');
+										for (var colIndex = 0; colIndex < columns.length; colIndex++) {
+										var cellValue = data[i][columns[colIndex]];
+										if (cellValue == null) cellValue = "";
+										row$.append($('<td/>').html(cellValue));
+										}
+										$(selector).append(row$);
+									}
+									}
+									
+									// Adds a header row to the table and returns the set of columns.
+									// Need to do union of keys from all records as some records may not contain
+									// all records.
+									function addAllColumnHeaders(data, selector) {
+									var columnSet = [];
+									var headerTr$ = $('<tr/>');
+									
+									for (var i = 0; i < data.length; i++) {
+										var rowHash = data[i];
+										for (var key in rowHash) {
+										if ($.inArray(key, columnSet) == -1) {
+											columnSet.push(key);
+											headerTr$.append($('<th/>').html(key));
+										}
+										}
+									}
+									$(selector).append(headerTr$);
+									
+									return columnSet;
+									}
+			
+								</script>
+
+	</head>
+	<body onLoad="buildHtmlTable('#excelDataTable')">
+		<table id="displayedTable" border="1">
+		</table>
+	</body>
+</html>
